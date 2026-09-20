@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>테마 실시간 모니터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef2f1;
+    --card:#ffffff;
+    --card-border:#bfe3da;
+    --teal:#1f9a86;
+    --teal-dark:#0f6e5e;
+    --up:#e0355b;
+    --down:#3b6fe0;
+    --ink:#1b2320;
+    --ink-dim:#6b756f;
+    --track:#e7ecea;
+    --badge-hi:#132a26;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans KR", system-ui, sans-serif;
+    padding:16px 12px 40px;
+    padding-top:calc(16px + env(safe-area-inset-top,0px));
+    padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));
+  }
+  .num{font-family:"IBM Plex Mono", ui-monospace, monospace;}
+  .wrap{max-width:760px;margin:0 auto;}
+
+  header{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;
+  }
+  header h1{font-size:16.5px;margin:0;font-weight:900;letter-spacing:-.01em;}
+  .header-right{display:flex;align-items:center;gap:8px;}
+  .live-pill{
+    display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--teal-dark);
+    background:#e4f5f1;border:1px solid var(--card-border);border-radius:20px;padding:5px 10px;
+  }
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .refresh-btn{
+    display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#fff;
+    background:var(--teal);border:none;border-radius:20px;padding:6px 12px;cursor:pointer;
+    font-family:inherit;transition:opacity .15s;
+  }
+  .refresh-btn:active{opacity:.75;}
+  .refresh-btn:disabled{opacity:.6;cursor:default;}
+  .refresh-btn .icon{display:inline-block;transition:transform .6s ease;}
+  .refresh-btn.spinning .icon{animation:spin .7s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  .updated-at{font-size:11px;color:var(--ink-dim);text-align:right;margin-bottom:12px;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media (max-width:480px){ .grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--card);border:1.5px solid var(--card-border);border-radius:14px;
+    padding:12px 12px 10px;
+  }
+  .card-head{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;
+  }
+  .card-head .name{font-size:14.5px;font-weight:700;}
+  .badge{
+    font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:700;color:#fff;
+    padding:3px 9px;border-radius:8px;background:var(--teal);
+  }
+  .badge.hi{background:var(--badge-hi);}
+
+  .counts{font-size:11px;color:var(--ink-dim);margin-bottom:8px;}
+  .counts b.up{color:var(--up);} .counts b.down{color:var(--down);}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;padding-top:4px;}
+  .chip{font-size:12px;background:#f1f6f4;border:1px solid var(--card-border);border-radius:20px;padding:4px 10px;color:var(--ink);}
+
+  .stock{padding:8px 0;border-top:1px dashed #e3e8e6;}
+  .stock:first-child{border-top:none;}
+  .stock-top{display:flex;justify-content:space-between;align-items:baseline;}
+  .stock-name{font-size:13px;font-weight:500;color:var(--ink);}
+  .stock-pct{font-size:13px;font-weight:700;}
+  .stock-pct.up{color:var(--up);} .stock-pct.down{color:var(--down);}
+  .stock-sub{display:flex;justify-content:space-between;align-items:center;margin-top:2px;}
+  .stock-meta{font-size:11px;color:var(--ink-dim);}
+  .stock-meta .price{color:var(--ink);font-weight:600;}
+  .stock-amt{font-size:11px;color:var(--ink-dim);}
+  .bar-track{
+    position:relative;height:5px;border-radius:3px;background:var(--track);margin-top:5px;overflow:visible;
+  }
+  .bar-fill{position:absolute;left:0;top:0;height:100%;border-radius:3px;}
+  .bar-fill.up{background:linear-gradient(90deg, #ffd3dc, var(--up));}
+  .bar-fill.down{background:linear-gradient(90deg, #d3e0ff, var(--down));}
+
+  .stock.hot{
+    background:linear-gradient(90deg, #fff8e1, transparent 60%);
+    border-left:3px solid #f0b429; margin-left:-3px; padding-left:9px; border-radius:4px;
+  }
+  .hot-tag{
+    display:inline-block;font-size:9.5px;font-weight:700;color:#8a5a00;
+    background:#ffe6a3;border-radius:5px;padding:1px 5px;margin-left:6px;vertical-align:middle;
+  }
+  .prog-tag{
+    display:inline-block;font-size:9.5px;font-weight:700;color:#0f3d66;
+    background:#cfe6ff;border-radius:5px;padding:1px 5px;margin-left:6px;vertical-align:middle;
+  }
+  .legend{
+    font-size:10.5px;color:var(--ink-dim);margin:0 0 10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .legend .item{display:flex;align-items:center;gap:5px;}
+  .legend .dot{width:9px;height:9px;border-radius:2px;background:#f0b429;display:inline-block;}
+  .legend .dot.blue{background:#4d8dff;}
+
+  .empty{
+    grid-column:1/-1;text-align:center;color:var(--ink-dim);padding:50px 16px;
+    border:1.5px dashed var(--card-border);border-radius:14px;font-size:13.5px;line-height:1.8;background:#fff;
+  }
+  .empty b{color:var(--ink);}
+  .empty code{background:#eef2f1;padding:1px 5px;border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>테마 실시간 순위</h1>
+    <div class="header-right">
+      <div class="live-pill"><span class="live-dot"></span>자동 갱신</div>
+      <button class="refresh-btn" id="refreshBtn" onclick="manualRefresh()">
+        <span class="icon">↻</span><span id="refreshLabel">새로고침</span>
+      </button>
+    </div>
+  </header>
+  <div class="updated-at" id="updatedAt">데이터 로딩 대기 중…</div>
+  <div class="legend">
+    <span class="item"><span class="dot"></span>거래대금 300억↑ · ETF/ETN 제외 상위 20위 (숫자 = 실제 순위)</span>
+    <span class="item"><span class="dot blue"></span>프로그램 순매수 상위 20위 (ka90003 스펙 확정 전까지는 표시 안 됨)</span>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const REFRESH_MS = 60 * 1000; // 화면 자동 새로고침 주기 (data.json 자체는 GitHub Actions가 5분마다 갱신)
+const DATA_URL = 'data.json';
+
+// data.json을 아직 못 찾을 때(예: 로컬 서버 없이 미리보기만 할 때) 보여줄 샘플 데이터
+const SAMPLE_SECTORS = [
+  {"name":"자율주행","avgPct":19.52,"periodPct":42.10,"risingCount":9,"fallCount":1,"flatCount":0,"stocks":[
+    {"name":"에이테크솔루션","price":7310,"chgPct":29.84,"amount":299,"time":"09:04"},
+    {"name":"퓨런티어","price":17570,"chgPct":22.18,"amount":1519,"time":"09:04"},
+    {"name":"에스오에스랩","price":12650,"chgPct":15.00,"amount":544,"time":"09:04"},
+    {"name":"슈어소프트테크","price":7940,"chgPct":11.05,"amount":1734,"time":"09:04"}
+  ]},
+  {"name":"로봇","avgPct":16.16,"periodPct":38.20,"risingCount":7,"fallCount":2,"flatCount":0,"stocks":[
+    {"name":"유일로보틱스","price":13850,"chgPct":29.92,"amount":718,"time":"09:10"},
+    {"name":"SJG세종","price":11850,"chgPct":13.07,"amount":978,"time":"09:10"},
+    {"name":"한라캐스트","price":18730,"chgPct":11.69,"amount":4394,"time":"09:10"},
+    {"name":"현대무빅스","price":18580,"chgPct":9.94,"amount":8671,"time":"09:10"}
+  ]},
+  {"name":"우주항공산업","avgPct":14.70,"periodPct":31.00,"risingCount":6,"fallCount":1,"flatCount":0,"stocks":[
+    {"name":"인콘아에어로","price":18610,"chgPct":25.24,"amount":4309,"time":"12:40"},
+    {"name":"비츠로넥스텍","price":15520,"chgPct":17.58,"amount":2977,"time":"12:40"},
+    {"name":"AP위성","price":13080,"chgPct":11.70,"amount":197,"time":"12:40"},
+    {"name":"나라스페이스","price":36350,"chgPct":4.30,"amount":3642,"time":"12:40"}
+  ]},
+  {"name":"바이오개열","avgPct":8.03,"periodPct":15.40,"risingCount":4,"fallCount":3,"flatCount":1,"stocks":[
+    {"name":"현대약품","price":7520,"chgPct":11.24,"amount":2123,"time":"10:10"},
+    {"name":"셀바스헬스케어","price":6390,"chgPct":8.31,"amount":1989,"time":"10:10"},
+    {"name":"알지노믹스","price":172700,"chgPct":6.80,"amount":8304,"time":"10:10"},
+    {"name":"일동제약","price":39450,"chgPct":5.76,"amount":2507,"time":"10:10"}
+  ]}
+];
+
+function fmtPct(v){ return (v>=0?'+':'') + Number(v).toFixed(2) + '%'; }
+function fmtNum(v){ return Math.round(v).toLocaleString('ko-KR'); }
+function dirClass(v){ return v >= 0 ? 'up' : 'down'; }
+
+// ETF/ETN으로 보이는 종목명을 걸러내기 위한 간단한 이름 기반 휴리스틱
+// (공식 종목유형 필드가 없어서 이름 패턴으로만 추정합니다 — 100% 정확하진 않을 수 있어요)
+const ETF_ETN_HINTS = [
+  'ETN','KODEX','TIGER','ACE','SOL','KBSTAR','HANARO','KINDEX','ARIRANG',
+  'TIMEFOLIO','KOSEF','MASTER','WOORI','FOCUS','PLUS','히어로즈','마이다스'
+];
+function isEtfLike(name){
+  if(!name) return false;
+  const upper = name.toUpperCase();
+  return ETF_ETN_HINTS.some(h => upper.includes(h.toUpperCase()));
+}
+
+// 현재 화면에 표시된 테마들의 종목만 대상으로 거래대금(추정) 상위 20 계산
+// (data.json에 정확한 trade_value_top(ka10032 공식 순위)이 있으면 그걸 우선 사용)
+// 반환: Map(종목코드 또는 종목명 -> 순위 1~20)
+function computeRankMap(sectors, officialTop, fallbackField){
+  const keyOf = s => s.code || s.name;
+  const map = new Map();
+  if(officialTop && officialTop.length){
+    officialTop.forEach(s => map.set(keyOf(s), s.rank));
+    return map;
+  }
+  // 공식 순위 데이터가 없을 때(예: 샘플 미리보기)만 화면에 보이는 종목 안에서 근사치 계산
+  const all = [];
+  (sectors || []).forEach(sec => (sec.stocks || []).forEach(s => {
+    if(s[fallbackField] && s[fallbackField] >= 300 && !isEtfLike(s.name)) all.push(s);
+  }));
+  all.sort((a,b) => b[fallbackField] - a[fallbackField]);
+  all.slice(0, 20).forEach((s, i) => map.set(keyOf(s), i + 1));
+  return map;
+}
+
+function render(sectors, updatedAt, tradeValueTop, programBuyTop){
+  const grid = document.getElementById('grid');
+  document.getElementById('updatedAt').textContent = updatedAt
+    ? `마지막 갱신: ${updatedAt}` : '데이터 없음';
+
+  if(!sectors || sectors.length === 0){
+    grid.innerHTML = `<div class="empty">
+      아직 <code>data.json</code>이 없어요.<br>
+      <b>kiwoom_sector_watcher.py</b>를 같은 폴더에서 실행하면<br>
+      1분마다 이 파일이 갱신되고 화면도 자동으로 새로고침됩니다.
+    </div>`;
+    return;
+  }
+
+  const tradeRankMap = computeRankMap(sectors, tradeValueTop, 'amount');
+  const programRankMap = computeRankMap(sectors, programBuyTop, null); // programBuyTop 없으면 빈 Map
+
+  grid.innerHTML = sectors.map(sec => {
+    const badgeCls = Math.abs(sec.avgPct) >= 15 ? 'badge hi' : 'badge';
+    const hasPriceData = (sec.stocks || []).some(s => s.chgPct !== null && s.chgPct !== undefined);
+
+    const countsHtml = (sec.risingCount !== undefined) ? `
+      <div class="counts">상승 <b class="up">${sec.risingCount}</b> · 보합 ${sec.flatCount} · 하락 <b class="down">${sec.fallCount}</b>${sec.periodPct !== undefined ? ` · 기간수익률 ${fmtPct(sec.periodPct)}` : ''}</div>
+    ` : '';
+
+    let bodyHtml;
+    if (hasPriceData) {
+      bodyHtml = (sec.stocks || []).slice(0,4).map(s=>{
+        const c = dirClass(s.chgPct);
+        const barW = Math.min(Math.abs(s.chgPct) / 30 * 100, 100);
+        const key = s.code || s.name;
+        const tradeRank = tradeRankMap.get(key);
+        const programRank = programRankMap.get(key);
+        const isHot = tradeRank !== undefined || programRank !== undefined;
+        const tags =
+          (tradeRank !== undefined ? `<span class="hot-tag">거래대금 ${tradeRank}위</span>` : '') +
+          (programRank !== undefined ? `<span class="prog-tag">프로그램 ${programRank}위</span>` : '');
+        return `
+          <div class="stock ${isHot ? 'hot' : ''}">
+            <div class="stock-top">
+              <span class="stock-name">${s.name}${tags}</span>
+              <span class="stock-pct ${c}">${fmtPct(s.chgPct)}</span>
+            </div>
+            <div class="stock-sub">
+              <span class="stock-meta"><span class="price num">${fmtNum(s.price)}</span> ${s.time ? ' · ' + s.time : ''}</span>
+              <span class="stock-amt num">${s.amount ? fmtNum(s.amount) + '억' : ''}</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill ${c}" style="width:${barW}%"></div></div>
+          </div>`;
+      }).join('');
+    } else {
+      // ka90002(종목별 가격) 데이터가 아직 없을 때: 주요종목 이름만 칩으로 표시
+      bodyHtml = `<div class="chips">${(sec.stocks || []).map(s=>`<span class="chip">${s.name}</span>`).join('')}</div>`;
+    }
+
+    return `
+      <div class="card">
+        <div class="card-head">
+          <span class="name">${sec.name}</span>
+          <span class="${badgeCls} num">${fmtPct(sec.avgPct)}</span>
+        </div>
+        ${countsHtml}
+        ${bodyHtml}
+      </div>`;
+  }).join('');
+}
+
+async function refresh(){
+  try{
+    const res = await fetch(DATA_URL + '?t=' + Date.now(), {cache:'no-store'});
+    if(!res.ok) throw new Error('no data.json yet');
+    const json = await res.json();
+    render(json.sectors, json.updated_at, json.trade_value_top, json.program_buy_top);
+  }catch(e){
+    render(SAMPLE_SECTORS, '샘플 데이터 (data.json을 찾지 못해 미리보기로 표시 중)');
+  }
+}
+
+async function manualRefresh(){
+  const btn = document.getElementById('refreshBtn');
+  const label = document.getElementById('refreshLabel');
+  btn.disabled = true;
+  btn.classList.add('spinning');
+  label.textContent = '새로고침 중…';
+  try{
+    await refresh();
+  } finally {
+    btn.classList.remove('spinning');
+    label.textContent = '새로고침';
+    btn.disabled = false;
+  }
+}
+
+refresh();
+setInterval(refresh, REFRESH_MS);
+</script>
+</body>
+</html>

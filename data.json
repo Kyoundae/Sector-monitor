@@ -1,0 +1,66 @@
+{
+  "updated_at": "2026-09-20 14:32:00",
+  "trade_value_top": [
+    {"code": "005930", "name": "삼성전자", "amount": 5308.1, "rank": 1},
+    {"code": "000660", "name": "SK하이닉스", "amount": 3120.4, "rank": 2}
+  ],
+  "program_buy_top": [],
+  "sectors": [
+    {
+      "name": "자율주행",
+      "avgPct": 19.52,
+      "periodPct": 42.10,
+      "risingCount": 9,
+      "fallCount": 1,
+      "flatCount": 0,
+      "stocks": [
+        {"name": "에이테크솔루션", "price": 7310, "chgPct": 29.84, "amount": 299, "time": "09:04"},
+        {"name": "퓨런티어", "price": 17570, "chgPct": 22.18, "amount": 1519, "time": "09:04"},
+        {"name": "에스오에스랩", "price": 12650, "chgPct": 15.00, "amount": 544, "time": "09:04"},
+        {"name": "슈어소프트테크", "price": 7940, "chgPct": 11.05, "amount": 1734, "time": "09:04"}
+      ]
+    },
+    {
+      "name": "로봇",
+      "avgPct": 16.16,
+      "periodPct": 38.20,
+      "risingCount": 7,
+      "fallCount": 2,
+      "flatCount": 0,
+      "stocks": [
+        {"name": "유일로보틱스", "price": 13850, "chgPct": 29.92, "amount": 718, "time": "09:10"},
+        {"name": "SJG세종", "price": 11850, "chgPct": 13.07, "amount": 978, "time": "09:10"},
+        {"name": "한라캐스트", "price": 18730, "chgPct": 11.69, "amount": 4394, "time": "09:10"},
+        {"name": "현대무빅스", "price": 18580, "chgPct": 9.94, "amount": 8671, "time": "09:10"}
+      ]
+    },
+    {
+      "name": "우주항공산업",
+      "avgPct": 14.70,
+      "periodPct": 31.00,
+      "risingCount": 6,
+      "fallCount": 1,
+      "flatCount": 0,
+      "stocks": [
+        {"name": "인콘아에어로", "price": 18610, "chgPct": 25.24, "amount": 4309, "time": "12:40"},
+        {"name": "비츠로넥스텍", "price": 15520, "chgPct": 17.58, "amount": 2977, "time": "12:40"},
+        {"name": "AP위성", "price": 13080, "chgPct": 11.70, "amount": 197, "time": "12:40"},
+        {"name": "나라스페이스", "price": 36350, "chgPct": 4.30, "amount": 3642, "time": "12:40"}
+      ]
+    },
+    {
+      "name": "바이오개열",
+      "avgPct": 8.03,
+      "periodPct": 15.40,
+      "risingCount": 4,
+      "fallCount": 3,
+      "flatCount": 1,
+      "stocks": [
+        {"name": "현대약품", "price": 7520, "chgPct": 11.24, "amount": 2123, "time": "10:10"},
+        {"name": "셀바스헬스케어", "price": 6390, "chgPct": 8.31, "amount": 1989, "time": "10:10"},
+        {"name": "알지노믹스", "price": 172700, "chgPct": 6.80, "amount": 8304, "time": "10:10"},
+        {"name": "일동제약", "price": 39450, "chgPct": 5.76, "amount": 2507, "time": "10:10"}
+      ]
+    }
+  ]
+}
